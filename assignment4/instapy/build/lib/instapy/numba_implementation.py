@@ -1,0 +1,63 @@
+import cv2
+import numpy as np
+from numba import jit
+
+
+def numba_color2gray(filename):
+    '''
+    Convert image to grayscale using python.
+    Args:
+        filename: filename/path to the wanted image.
+
+    Returns: image
+
+    '''
+    try:
+        image = cv2.imread(filename)
+    except Exception:
+        print("cant find file specified")
+        return
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = numbaGrayCal(image)
+    image = image.astype("uint8")
+    return image
+
+@jit(nopython=True)
+def numbaGrayCal(image):
+    for i in range(len(image)):
+        for j in range(len(image[i])):
+            tmp = image[i][j][0] * .21 + image[i][j][1] * .72 + image[i][j][2] * .07
+            image[i][j] = (tmp, tmp, tmp)
+    return image
+
+
+def numba_color2sepia(filename):
+    '''
+    Convert image to sepia using numba.
+    Args:
+        filename: filename/path to the wanted image.
+
+    Returns: tree dimensional array with sepia values.
+    '''
+    try:
+        image = cv2.imread(filename)
+    except Exception:
+        print("cant find file specified")
+        return
+    sep = numbaSepCall(image)
+    return sep
+
+@jit(nopython=True)
+def numbaSepCall(image):
+    sep = np.zeros((len(image), len(image[0]), 3), np.uint8)
+    sepia_matrix = [[0.393, 0.769, 0.189],
+                    [0.349, 0.686, 0.168],
+                    [0.272, 0.534, 0.131]]
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            for k in range(len(image[0][0])):
+                temp1 = image[i][j][0] * sepia_matrix[k][2]
+                temp2 = image[i][j][1] * sepia_matrix[k][1]
+                temp3 = image[i][j][2] * sepia_matrix[k][0]
+                sep[i][j][(2 - k)] = min(255, (temp1 + temp2 + temp3))
+    return sep
